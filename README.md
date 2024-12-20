@@ -13,7 +13,8 @@ Nous avons alors utilisé deux éléments essentiels pour travailler avec les ad
 
 ----- INET_ADDRSTRLEN : 
 ////////////////////////////////////////////////
-char ip_str[INET_ADDRSTRLEN];
+![image](https://github.com/user-attachments/assets/b8b5ba36-ff96-45b1-ac98-0ea467a84aa2)
+
 /////////////////////////////////////////////////
 INET_ADDRSTRLEN est une constante définie dans le fichier d'en-tête <arpa/inet.h>. Elle spécifie la longueur maximale d'une chaîne de caractères pour une adresse IPv4
 Ici, nous déclarons un tableau de caractères ip_str qui sera utilisé pour stocker l'adresse IP sous forme de chaîne lisible. La taille du tableau est définie par INET_ADDRSTRLEN pour garantir que nous avons suffisamment d'espace pour contenir l'adresse IPv4.
