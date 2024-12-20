@@ -1,4 +1,5 @@
 TP de Synthèse
+
 README TP1
 
 
@@ -12,34 +13,21 @@ Le programme initialise la structure addrinfo pour spécifier que l'on veut rés
 Nous avons alors utilisé deux éléments essentiels pour travailler avec les adresses IP sous forme lisible: INET_ADDRSTRLEN et inet_ntop
 
 ----- INET_ADDRSTRLEN : 
-////////////////////////////////////////////////
 ![image](https://github.com/user-attachments/assets/b8b5ba36-ff96-45b1-ac98-0ea467a84aa2)
 
-/////////////////////////////////////////////////
 INET_ADDRSTRLEN est une constante définie dans le fichier d'en-tête <arpa/inet.h>. Elle spécifie la longueur maximale d'une chaîne de caractères pour une adresse IPv4
 Ici, nous déclarons un tableau de caractères ip_str qui sera utilisé pour stocker l'adresse IP sous forme de chaîne lisible. La taille du tableau est définie par INET_ADDRSTRLEN pour garantir que nous avons suffisamment d'espace pour contenir l'adresse IPv4.
 
 ----- inet_stop :
-/////////////////////////////////////////////////
-inet_ntop(AF_INET, &addr->sin_addr, ip_str, sizeof(ip_str));
-//////////////////////////////////////////////////
+![image](https://github.com/user-attachments/assets/bd73751e-8acf-4519-a917-5ef770079950)
+
 inet_ntop est une fonction qui permet de convertir une adresse IP binaire en une chaîne de caractères lisible.
 
 Dans ce programme, nous avons utilisé la fonction socket() pour créer un socket, qui est essentiel pour établir une connexion réseau entre le client et le serveur. Bien que la fonction getaddrinfo() soit utilisée pour récupérer les informations d'adresse du serveur , ce n'est qu'en créant un socket que nous pouvons réellement établir une communication avec ce serveur. 
 Pour cela noux avons utilsié cette fonction :  int sockfd = socket(r->ai_family, r->ai_socktype, r->ai_protocol);
 
 Ici, un message générique, "Hello, Server!", est envoyé. Si l'envoi se fait correctement, un message de confirmation nous indique que le message a bien été envoyé, ce qui prouve que la connexion au serveur est établie avec succès et que le lien entre le client et le serveur fonctionne correctement : 
-//////////////////////////////////////////////////////////////////////////////
- const char *test_msg = "Hello, Server!";
-        ssize_t bytes_sent = sendto(sockfd, test_msg, strlen(test_msg), 0,
-                                    r->ai_addr, r->ai_addrlen);
-        if (bytes_sent < 0) {
-            perror("Error: Unable to send test message");
-        } else {
-            write(STDOUT_FILENO, "Message sent successfully!\n", 27);
-        }
-
-  ////////////////////////////////////////////////////////////////////////////
+![image](https://github.com/user-attachments/assets/737f41f6-cade-49ea-ba54-4d3e73cb0b68)
 
 On a fait des tests avec : ./addrinfo google.com
 on obtient le résultat suivant :
@@ -55,25 +43,20 @@ Message sent successfully!
 Elle se compose en plusieurs parties 
 - OpCode :  Pour une requête RRQ, l'OpCode est `0x0001`
   Donc à l'aide de ces lignes :
-  ////////////////////////
-    buffer[len++] = 0;
-    buffer[len++] = 1;
-  //////////////////////////
+![image](https://github.com/user-attachments/assets/d5c341cc-9456-477e-ba75-5154bbb5343c)
+
   on a buffer[0] = 0x00 et buffer[1] = 0x01
 - Nom du fichier :Le nom du fichier que le client souhaite récupérer.
   Donc disons que le nom de fichier est "test.txt"on aura : buffer[2] = 't', buffer[3] = 'e', ... buffer[10] = '\0' (Fin du nom du fichier "test.txt")
-  ////////////////////////////
-  strcpy(&buffer[len], filename); // copy filename into buffer
-   len += strlen(filename) + 1;  // filename + '\0'
-  ////////////////////////////////
+![image](https://github.com/user-attachments/assets/0fbddf9f-c888-43b9-827a-ed9da31e43ee)
+
 - Mode de transfert : Dans ce cas, le mode utilisé est "octet", qui indique que le fichier doit être transféré en mode binaire.
   On aura ainsi : buffer[11] = 'o',buffer[12] = 'c'... buffer[17] = '\0' (Fin de "octet")
 
  2. Fonction "send_rrq" :
 Un fois la requête faite, cette fonction crée et envoie la requêteRRQ au serveur TFTP via la fonction sendto() qui permet d'envoyer des données par un socket UDP à l'adresse du serveur spécifiée.
-////////////////////////////////////
- ssize_t bytes_sent = sendto(sockfd, buffer, len, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
- //////////////////////////////////////
+![image](https://github.com/user-attachments/assets/88b48f8a-51ff-4051-b4c8-7e63816a2ead)
+
  
 3. Fonction "print_rrq_request" :
 Cette fonction  n'est pas nécessaire mais sert à afficher la requête RRQ construite, sous forme hexadécimale. On voulait voir si notre RQQ était correctement écrite et à quoi cela ressemblait.Cela permet de vérifier que la requête a été correctement construite avant de l'envoyer. Cela permet aussi de comprendre la structure du message transmis dans le réseau.
@@ -88,18 +71,13 @@ FICHIER PUTTFTP
 
 Dans ce fichier, nous avons réalisé un code pour lire le contenu d'un fichier et à afficher son contenu à l'écran.
 Ce qui nous a été utile ici est  "O_RDONLY" qui nous permet d'ouvrir des ficheirs en lecture seule à l'aide de la fonction open : 
-////////////////////////////////////////////
-int file_fd = open(filename, O_RDONLY);
-///////////////////////////////////////////
+![image](https://github.com/user-attachments/assets/bef3761e-fb13-4983-a4d0-e7b429923b22)
+
 Nous avons fait un teste avec le fichier "motd.txt".Il faut faire attention à ne pas écrire dans la console : ./puttftp 127.0.0.1 motd.txt  mais remplacer "mots.txt" par le chemin complet qui est dans notre cas : ./puttftp 127.0.0.1 /home/ensea/Documents/tpsynthese_hsaini_elyaakoubi/tp2/serveur/motd.txt
 Ainsi on obtient l'affichage suivant : 
-Server IP: 127.0.0.
-File to upload: Er/home/en
-Reading file content:
-Do, or do not; there is no try.
-                -- Master Yoda
-                
+![image](https://github.com/user-attachments/assets/ae878534-d0e6-417c-98ef-437184505644)
 
+                
 CONCLUSION TP 2 : 
 Ce TP nous a permis de mieux comprendre et manipuler les différents aspects du protocole TFTP et des communications réseau en général. 
 Cependant, plusieurs difficultés sont survenues tout au long du TP, principalement liées à la gestion des sockets et à la compréhension du fonctionnement des requêtes RRQ.
