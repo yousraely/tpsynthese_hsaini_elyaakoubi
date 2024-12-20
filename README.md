@@ -1,7 +1,85 @@
 TP de Synthèse
 
 README TP1
+Dans le cadre de notre TP de synthèse intitulé "ENSEA in the Shell", nous avons développé un micro-shell en C. Ce shell simplifié, que nous avons nommé enseash, est capable d'exécuter des commandes simples, d'afficher les codes de retour des programmes lancés, et de gérer proprement leur terminaison, qu'elle soit normale ou due à un signal.
 
+Programme des questions 1 à 3 :
+Dans cette première partie du TP, nous avons travaillé sur la création d'un mini-shell nommé "enseash". L'idée était de poser les bases d'un interpréteur de commandes simple et interactif. Voici comment nous avons procédé et ce que nous avons appris : 
+Afficher le message d'accueil :
+Dès que le programme démarre, un message d'accueil est affiché dans le terminal, indiquant à l'utilisateur qu'il est dans le shell et qu'il peut quitter avec la commande exit.
+Pour cela, nous avons utilisé la fonction système write, qui permet d'écrire directement dans le terminal.
+Créer un prompt interactif :
+Après l'affichage du message d'accueil, un prompt (enseash%) est affiché pour indiquer que le shell est prêt à recevoir des commandes.
+Le prompt s'affiche en boucle, grâce à une structure répétitive ( boucle while(1)), jusqu'à ce que l'utilisateur quitte le shell.
+Nous avons utilisé "strcmp" pour comparer les chaines de caractères à "exit". 
+Pour permettre à l'utilisateur de quitter le shell, nous avons implémenté une commande spéciale : exit.
+Lorsque l'utilisateur saisit "exit", le programme affiche un message de sortie (« Bye bye ;) ! » dans notre cas) et termine le shell.
+Par exemple avec "hello" la boucle continue et avec "exit" elle s'arrête
+![image](https://github.com/user-attachments/assets/2ffb2ea6-5587-4b31-bb02-d06b060774ed)
+
+
+Difficultés rencontrées
+STDXX_FILENO
+STDIN_FILENO (entrée) et STDOUT_FILENO (sortie) sont utilisés dans read et write pour lire depuis l'entrée  ou écrire vers la sortie. Ces sont des descripteurs de fichier en Linux
+Gestion des erreurs et des signaux :
+Lors de la lecture des commandes avec read, il a fallu gérer le cas où Ctrl+D est pressé (indiquant un EOF) ou lorsqu'une erreur se produit.
+Suppression du caractère de retour à la ligne :
+La commande saisie contient toujours un \n final qui doit être retiré avant de comparer la chaîne avec "exit". Cela a été réalisé avec la ligne du code suivant : 
+
+Questions  4 :
+
+Dans cette question nous avons ajouté la fonctionnalité suivante à notre shell : l'exécution des commandes utilisateur et l'affichage des codes de retour ou des signaux si un processus est interrompu. 
+Pour cela nous avons créé le processus enfant (fork) : cette méthode permet  d’exécuter  la commande saisie par l'utilisateur dans un processus séparé.
+![image](https://github.com/user-attachments/assets/1ad186b3-2798-4b4b-945b-900ead7593f0)
+
+fork() duplique le processus actuel en deux :
+Le processus parent : continue d'exécuter le code principal (le shell). (Si pid>0)
+Le processus enfant : exécute la commande utilisateur. (Si pid=0)
+Dans le processus enfant, on utilise la fonction execlp pour exécuter la commande stockée dans buffer avec execlp(buffer, buffer, NULL)
+Si execlp réussit, il remplace le contenu du processus enfant par le programme de la commande.
+Si la commande est invalide ou introuvable, execlp échoue. Dans ce cas, le code suivant execlp est exécuté pour afficher un message d'erreur :
+Et on quitte le processus enfant avec « exit(EXIT_FAILURE) ». 
+
+Maintenant on gère le child process dans le Parent process: 
+Le parent utilise « wait(&status) » pour suspendre son exécution jusqu'à ce que le processus enfant se termine.
+La fonction wait renvoie des informations sur la manière dont le processus enfant s’est terminé (succès, échec, ou signal).
+Une fois le processus enfant fini, le parent analyse son statut avec les macros WIFEXITED et WIFSIGNALED.
+
+Si la terminaison est normal : 
+WIFEXITED(status) : Retourne true si le processus enfant s’est terminé normalement.
+WEXITSTATUS(status) : Retourne le code de retour du processus enfant (généralement 0 pour succès).
+On construit alors un message formaté de la manière suivante : enseash[exit:<code>]%
+
+Si la terminaison se fait par un signal 
+WIFSIGNALED(status) : Retourne true si le processus enfant a été interrompu par un signal.
+WTERMSIG(status) : Retourne le numéro du signal qui a causé l’interruption.
+On construit alors un message formaté de la manière suivante : enseash[sign:<code>]%
+
+On a pu tester uniquement si la terminaison est normal : 
+![image](https://github.com/user-attachments/assets/a9e2e713-ab7c-44d3-8f15-9cd1f95f3b4f)
+
+Question 5 : 
+
+Dans cette question, on souhaite afficher le temps d'exécution des commandes utilisateur.
+Pour mesurer la durée d’exécution d’une commande, nous avons utilisé la fonction clock_gettime de la bibliothèque <time.h>. Cette fonction est idéale car elle utilise une horloge appelée CLOCK_MONOTONIC. Avant l'exécution de la commande, nous enregistrons l'heure de début avec la commande clock_gettime(CLOCK_MONOTONIC, &start). Après l'exécution, nous enregistrons l'heure de fin avec clock_gettime(CLOCK_MONOTONIC, &end). 
+![image](https://github.com/user-attachments/assets/3b3531db-a28d-4f9c-be8c-645891f8d737)
+Dans timespec, le temps est séparé en secondes et nanosecondes pour être précis et facile à utiliser. On utilise les secondes pour mesurer les durées longues, comme plusieurs minutes ou heures, et les nanosecondes pour obtenir une précision très fine On convertit ces deux valeurs en millisecondes dans notre code pour afficher clairement le temps que met chaque commande à s’exécuter. 
+De cette manière notre message formaté sera maintenant :  [sign:<signal>|<temps>]% ou [exit:<code>|<temps>]%
+
+![image](https://github.com/user-attachments/assets/8368146b-caeb-4ed4-bb41-5facbcf474d3)
+
+En testant avec la chaîne de caractères "hello", nous obtenons une durée de 0 ms. Ce résultat reste identique lorsque nous utilisons d'autres chaînes de caractères, ce qui soulève une interrogation. Nous ne savons pas si cela est dû à la rapidité de l'exécution, rendant la précision en millisecondes insuffisante pour capturer une durée aussi courte, ou si cela résulte d'un problème sous-jacent dans notre implémentation ou dans la manière dont la durée est mesurée.
+
+Question 6 :
+Dans cette question, on écrit un programme qui va nous permettre d’exécuter des commandes avec arguments.
+On utilise strtok pour découper l'entrée utilisateur en plusieurs morceaux (qui sont les arguments), en se basant sur les espaces comme séparateurs. Chaque morceau est stocké dans un tableau appelé args. Ce tableau est ensuite utilisé pour exécuter la commande avec ses arguments.
+Par exemple , ls -l /home sera découpé de la manière suivante : args[0] = "ls", args[1] = "-l", args[2] = "/home" et args[3] = NULL (pour signaler la fin des arguments)
+On utilisera toujours fork pour créer un processus enfant qui exécute la commande de la même manière que la question 5
+
+
+CONCLUSION TP1 : 
+Ce TP nous a permis de construire pas à pas un shell fonctionnel. On a commencé avec un prompt simple capable de gérer la commande exit, puis on a ajouté l’exécution de commandes, le code de retour, les signaux, et enfin la gestion des arguments.
+Ce qu’on a trouvé intéressant, c’est de manipuler des processus avec fork et wait, d’utiliser execvp pour exécuter des commandes, et de mesurer leur temps d’exécution avec clock_gettime par exemple. Grâce à ce TP, on a mieux compris comment fonctionne un shell et les bases des systèmes Linux, tout en construisant un programme qui ressemble à un vrai terminal.
 
 README TP2
 
@@ -81,10 +159,10 @@ Ainsi on obtient l'affichage suivant :
 CONCLUSION TP 2 : 
 Ce TP nous a permis de mieux comprendre et manipuler les différents aspects du protocole TFTP et des communications réseau en général. 
 Cependant, plusieurs difficultés sont survenues tout au long du TP, principalement liées à la gestion des sockets et à la compréhension du fonctionnement des requêtes RRQ.
-----------Création et utilisation des Sockets : La première difficulté a été de comprendre comment créer et utiliser un socket pour établir une connexion réseau. Le lien entre l'adresse récupérée via getaddrinfo() et le socket créé par la fonction socket() n'était pas immédiatement évident. En effet, bien que getaddrinfo() fournisse l'adresse du serveur, c’est le socket qui permet d'envoyer et de recevoir des données à travers cette adresse. Il a fallu bien saisir ce lien et la manière dont les données transitent à travers les sockets pour assurer la communication.
-----------Structure de la requête RRQ : La construction de la requête RRQ elle-même, a été un autre défi. Comprendre la structure binaire de la requête, particulièrement la façon dont les données sont encodées et envoyées, nous a demandé un peu de temps c'est pourquoi afficher la requête en hexadécimal p nous a permis de mieux comprendre comment chaque élément de la requête est interprété.
-----------Gestion des erreurs et des retours : Une autre difficulté a été liée à la gestion des erreurs.. fonction sendto() pour s'assurer que le message a bien été envoyé a nécessité de prêter une attention particulière aux messages d'erreur retournés.
+La première difficulté a été de comprendre comment créer et utiliser un socket pour établir une connexion réseau. Le lien entre l'adresse récupérée via getaddrinfo() et le socket créé par la fonction socket() n'était pas immédiatement évident. En effet, bien que getaddrinfo() fournisse l'adresse du serveur, c’est le socket qui permet d'envoyer et de recevoir des données à travers cette adresse. Il a fallu bien saisir ce lien et la manière dont les données transitent à travers les sockets pour assurer la communication.
+La construction de la requête RRQ elle-même, a été un autre défi. Comprendre la structure binaire de la requête, particulièrement la façon dont les données sont encodées et envoyées, nous a demandé un peu de temps c'est pourquoi afficher la requête en hexadécimal p nous a permis de mieux comprendre comment chaque élément de la requête est interprété.
+Une autre difficulté a été liée à la gestion des erreurs.. fonction sendto() pour s'assurer que le message a bien été envoyé a nécessité de prêter une attention particulière aux messages d'erreur retournés.
 
-En conclusion, ce TP nous a permis de mieux comprendre les fondements de la communication réseau et de la mise en œuvre du protocole TFTP. Bien que nous ayons rencontré quelques difficultés, elles nous ont poussés à approfondir nos connaissances, notamment en ce qui concerne les sockets, la gestion des requêtes réseau, et la construction des paquets TFTP.
+
 
 
