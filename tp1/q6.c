@@ -16,7 +16,7 @@ int main() {
     while (1) {
        write(STDOUT_FILENO, prompt, sizeof(prompt));
 
-        ssize_t letter = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+        int letter = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
         if (letter <= 0) {
             write(STDOUT_FILENO, quitMessage, sizeof(quitMessage));
             break;
@@ -28,13 +28,15 @@ int main() {
             break;
         }
 
-        // Parse the command into arguments
+        //Split the input command into tokens (arguments) using spaces
+
         char *token = strtok(buffer, " ");  
         int i = 0;
         while (token != NULL) {
-            args[i] = token;
+            args[i] = token; // Store each argument
             i++;
-            token = strtok(NULL, " ");
+            token = strtok(NULL, " "); // Get the next token
+
         }
         args[i] = NULL; // Null-terminate the array of arguments
 

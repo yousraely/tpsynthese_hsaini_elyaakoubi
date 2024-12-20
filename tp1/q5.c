@@ -19,7 +19,7 @@ int main() {
 
         write(STDOUT_FILENO, prompt, sizeof(prompt) - 1);
 
-        ssize_t letter = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+        int letter = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
         if (letter <= 0) {
             write(STDOUT_FILENO, quitMessage, sizeof(quitMessage) - 1);
             break; 
